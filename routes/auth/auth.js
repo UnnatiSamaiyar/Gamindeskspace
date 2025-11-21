@@ -8,110 +8,7 @@ const emailTransporter = require('../../utils/emailConfig');
 const { upperPartHtml,lowerPartHtml } = require('../../utils/utilsMethod') 
 // this is auth route for login, add employee,  update employee, get all employee and delete 
 
-router.post("/employee",verifyTokenAndAdmin, async (req, res) => {
-  try {
-
-    console.log(req.body);
-    const hashedPassword = CryptoJS.SHA256(req.body.password).toString(CryptoJS.enc.Hex);
-
-    if(req.body.role==='admin' && req.body.productCategory!=='ADMIN'  ){
-      return res.status(400).json({message:"For Admin Role, Chose ADMIN Emp Category"});
-    }
-
-    if(req.body.role!=='admin' && req.body.productCategory==='ADMIN'  ){
-      return res.status(400).json({message:"ADMIN category only for admin role!"});
-    }
-
-    const newEmployee = new Employee({
-      name: req.body.name,
-      email: req.body.email,
-      phone: req.body.phone,
-      role: req.body.role,
-      productCategory: req.body.role==='admin' ? null : req.body.productCategory,
-      password: hashedPassword,
-      createdBy: req.body.createdBy
-    });
-
-    const savedEmployee = await newEmployee.save();
-
-    const creator = await Employee.findById(req.employee._id);
-
-    try{   
-  //   const html = await res.render('newAccTemplate',{layout: false}, {
-  //     name: savedEmployee.name,
-  //     email: savedEmployee.email,
-  //     phone: savedEmployee.phone,
-  //     role: savedEmployee.role,
-  //     productCategory: savedEmployee.productCategory,
-  //     createdAt: savedEmployee.createdAt,
-  //     createdByName: creator.name,
-  //     forgotPasswordLink: "https://www.google.com"
-  // });
-
-
-
-  const contentHtml =` <div class="header">
-  <h1>Account Created Successfully</h1>
-</div>
-          <div class="content">
-              <p>Dear ${savedEmployee.name},</p>
-              <p>We are pleased to inform you that your employee account has been created. Below are your account details:</p>
-              <table class="details-table">
-                  <tr>
-                      <th>Name:</th>
-                      <td>${savedEmployee.name}</td>
-                  </tr>
-                  <tr>
-                      <th>Email:</th>
-                      <td>${savedEmployee.email}</td>
-                  </tr>
-                  <tr>
-                      <th>Phone:</th>
-                      <td>${savedEmployee.phone}</td>
-                  </tr>
-                  <tr>
-                      <th>Role:</th>
-                      <td>${savedEmployee.role}</td>
-                  </tr>
-                  <tr>
-                      <th>Product Category:</th>
-                      <td>${savedEmployee.productCategory}</td>
-                  </tr>
-                  <tr>
-                      <th>Created At:</th>
-                      <td>${savedEmployee.createdAt.toLocaleDateString()}</td>
-                  </tr>
-                  <tr>
-                      <th>Created By:</th>
-                      <td>${creator.name}</td>
-                  </tr>
-              </table>
-              <p class="note">If you haven't received the password from the admin, please use the <a href="${process.env.FRONTEND_URL}" class="btn">Forgot Password</a> option to create a new one.</p>
-          </div> `
-
-
-          const html= upperPartHtml+contentHtml+lowerPartHtml
- 
-
-      await emailTransporter.sendMail({
-        from: process.env.EMAIL_FROM,
-        to: savedEmployee.email,
-        subject: 'Your Employee Account has been Created',
-        html: html
-    });
-  }catch(error){console.log("error in sending mail",error.message)}
-
-    res.status(201).json(savedEmployee);
-
-    
-
-  } catch (err) {
-    console.log(err)
-    res.status(500).json(err);
-  }
-});
-
-// router.post("/employee", async (req, res) => {
+// router.post("/employee",verifyTokenAndAdmin, async (req, res) => {
 //   try {
 
 //     console.log(req.body);
@@ -137,10 +34,23 @@ router.post("/employee",verifyTokenAndAdmin, async (req, res) => {
 
 //     const savedEmployee = await newEmployee.save();
 
-//     const creator = await Employee.findById(req.employee?._id);
+//     const creator = await Employee.findById(req.employee._id);
 
 //     try{   
-//       const contentHtml =` <div class="header">
+//   //   const html = await res.render('newAccTemplate',{layout: false}, {
+//   //     name: savedEmployee.name,
+//   //     email: savedEmployee.email,
+//   //     phone: savedEmployee.phone,
+//   //     role: savedEmployee.role,
+//   //     productCategory: savedEmployee.productCategory,
+//   //     createdAt: savedEmployee.createdAt,
+//   //     createdByName: creator.name,
+//   //     forgotPasswordLink: "https://www.google.com"
+//   // });
+
+
+
+//   const contentHtml =` <div class="header">
 //   <h1>Account Created Successfully</h1>
 // </div>
 //           <div class="content">
@@ -173,31 +83,121 @@ router.post("/employee",verifyTokenAndAdmin, async (req, res) => {
 //                   </tr>
 //                   <tr>
 //                       <th>Created By:</th>
-//                       <td>${creator?.name || 'N/A'}</td>
+//                       <td>${creator.name}</td>
 //                   </tr>
 //               </table>
 //               <p class="note">If you haven't received the password from the admin, please use the <a href="${process.env.FRONTEND_URL}" class="btn">Forgot Password</a> option to create a new one.</p>
 //           </div> `
 
-//       const html= upperPartHtml+contentHtml+lowerPartHtml
+
+//           const html= upperPartHtml+contentHtml+lowerPartHtml
+ 
 
 //       await emailTransporter.sendMail({
 //         from: process.env.EMAIL_FROM,
 //         to: savedEmployee.email,
 //         subject: 'Your Employee Account has been Created',
 //         html: html
-//       });
-//     }catch(error){
-//       console.log("error in sending mail",error.message)
-//     }
+//     });
+//   }catch(error){console.log("error in sending mail",error.message)}
 
 //     res.status(201).json(savedEmployee);
+
+    
 
 //   } catch (err) {
 //     console.log(err)
 //     res.status(500).json(err);
 //   }
 // });
+
+router.post("/employee", async (req, res) => {
+  try {
+
+    console.log(req.body);
+    const hashedPassword = CryptoJS.SHA256(req.body.password).toString(CryptoJS.enc.Hex);
+
+    if(req.body.role==='admin' && req.body.productCategory!=='ADMIN'  ){
+      return res.status(400).json({message:"For Admin Role, Chose ADMIN Emp Category"});
+    }
+
+    if(req.body.role!=='admin' && req.body.productCategory==='ADMIN'  ){
+      return res.status(400).json({message:"ADMIN category only for admin role!"});
+    }
+
+    const newEmployee = new Employee({
+      name: req.body.name,
+      email: req.body.email,
+      phone: req.body.phone,
+      role: req.body.role,
+      productCategory: req.body.role==='admin' ? null : req.body.productCategory,
+      password: hashedPassword,
+      createdBy: req.body.createdBy
+    });
+
+    const savedEmployee = await newEmployee.save();
+
+    const creator = await Employee.findById(req.employee?._id);
+
+    try{   
+      const contentHtml =` <div class="header">
+  <h1>Account Created Successfully</h1>
+</div>
+          <div class="content">
+              <p>Dear ${savedEmployee.name},</p>
+              <p>We are pleased to inform you that your employee account has been created. Below are your account details:</p>
+              <table class="details-table">
+                  <tr>
+                      <th>Name:</th>
+                      <td>${savedEmployee.name}</td>
+                  </tr>
+                  <tr>
+                      <th>Email:</th>
+                      <td>${savedEmployee.email}</td>
+                  </tr>
+                  <tr>
+                      <th>Phone:</th>
+                      <td>${savedEmployee.phone}</td>
+                  </tr>
+                  <tr>
+                      <th>Role:</th>
+                      <td>${savedEmployee.role}</td>
+                  </tr>
+                  <tr>
+                      <th>Product Category:</th>
+                      <td>${savedEmployee.productCategory}</td>
+                  </tr>
+                  <tr>
+                      <th>Created At:</th>
+                      <td>${savedEmployee.createdAt.toLocaleDateString()}</td>
+                  </tr>
+                  <tr>
+                      <th>Created By:</th>
+                      <td>${creator?.name || 'N/A'}</td>
+                  </tr>
+              </table>
+              <p class="note">If you haven't received the password from the admin, please use the <a href="${process.env.FRONTEND_URL}" class="btn">Forgot Password</a> option to create a new one.</p>
+          </div> `
+
+      const html= upperPartHtml+contentHtml+lowerPartHtml
+
+      await emailTransporter.sendMail({
+        from: process.env.EMAIL_FROM,
+        to: savedEmployee.email,
+        subject: 'Your Employee Account has been Created',
+        html: html
+      });
+    }catch(error){
+      console.log("error in sending mail",error.message)
+    }
+
+    res.status(201).json(savedEmployee);
+
+  } catch (err) {
+    console.log(err)
+    res.status(500).json(err);
+  }
+});
 
 // {
 //   "name": "Unnati Samaiyar",
