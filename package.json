@@ -4,8 +4,8 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "start": "nodemon index.js",
-        "start:swipe": "nodemon index.js swipe",
+        "start": "node index.js",
+        "start:swipe": "node index.js swipe",
         "start:uat": "node index.js uat",
         "start:prod": "TZ='Asia/Kolkata' node index.js production",
         "start:swipeprod": "TZ='Asia/Kolkata' node index.js swipeproduction"
