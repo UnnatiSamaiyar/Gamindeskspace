@@ -1,42 +1,24 @@
-
 const dotenv = require("dotenv");
-const environment = process.argv[2] || 'development';
-//const envFile = environment === 'production' ? '.env.prod' :environment === 'uat' ? '.env.uat' : '.env';
-const envFile = environment === 'production' ? '.env.prod' :
-    environment === 'swipeproduction' ? '.env.prodswipe' :
-        environment === 'uat' ? '.env.uat' :
-            environment === 'swipe' ? '.env.swipe' : '';
 
-try {
-    dotenv.config({ path: envFile });
-    console.log(`Environment: ${environment}`);
-    console.log(`Environment file loaded: ${envFile}`);
-    console.log(process.env.FRONTEND_URL)
-
-} catch (error) {
-    console.error(`Failed to load ${envFile} file`, error);
-    process.exit(1);
-}
-
+// Always load only .env
+dotenv.config({ path: ".env" });
+console.log("Environment file loaded: .env");
+console.log(process.env.FRONTEND_URL);
 
 const express = require("express");
-
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const connectDB = require("./utils/connectDB");
-const path = require('path');
+const path = require("path");
 // const { initializeWebSocket } = require("./utils/websocketUtil");
 // const WebSocket = require('ws');
 
-const { setupSocket, getIo } = require('./utils/socketConfig');
-const cron = require('node-cron');
+const { setupSocket, getIo } = require("./utils/socketConfig");
+const cron = require("node-cron");
 // const handlebars = require('express-handlebars');
-const { engine } = require('express-handlebars');
+const { engine } = require("express-handlebars");
 
-const Notification = require('./models/Notification');
-
-
-
+const Notification = require("./models/Notification");
 
 //Employee and auth
 const authRoute = require("./routes/auth/auth");
@@ -60,27 +42,28 @@ const taskRoute = require("./routes/tasks/task");
 const threadRoute = require("./routes/tasks/thread");
 const reportRoute = require("./routes/reports/reports");
 const mapper = require("./routes/mapper/mapper");
-const requirementRoute = require("./routes/requirements/requirements")
-const notificationRoutes = require('./routes/notification/notification');
-const bulkUpload = require('./routes/bulkUpload/bulkupload');
+const requirementRoute = require("./routes/requirements/requirements");
+const notificationRoutes = require("./routes/notification/notification");
+const bulkUpload = require("./routes/bulkUpload/bulkupload");
 
-const { getUserSocket } = require('./utils/socketConfig');
-const { fetchAndSendReport } = require('./utils/reportEmailScheduler');
+const { getUserSocket } = require("./utils/socketConfig");
+const { fetchAndSendReport } = require("./utils/reportEmailScheduler");
 
 const routingtaskRoute = require("./routes/tasks/routingTask");
 const routingTaskThread = require("./routes/tasks/routingTaskThread");
 
-
 const app = express();
 // const wss = new WebSocket.Server({ noServer: true });
-dotenv.config();
+
 app.use(cors());
 // const server = http.createServer(app);
+
+const PORT = process.env.PORT || 4000;
+
 connectDB().then(() => {
-    const server =
-        app.listen(PORT, () => {
-            console.log("Server running on port:", PORT);
-        });
+    const server = app.listen(PORT, () => {
+        console.log("Server running on port:", PORT);
+    });
     setupSocket(server);
 });
 
@@ -90,9 +73,8 @@ app.use((req, res, next) => {
     next();
 });
 
-
-app.engine('handlebars', engine());
-app.set('view engine', 'handlebars');
+app.engine("handlebars", engine());
+app.set("view engine", "handlebars");
 app.set("views", "./views");
 
 // const io = setupSocket(server);
@@ -108,7 +90,7 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(bodyParser.json());
 
 // initializeWebSocket(server);
-app.use("/file", express.static('uploads'));
+app.use("/file", express.static("uploads"));
 
 //Employees and auth Route
 app.use("/api", authRoute);
@@ -123,7 +105,7 @@ app.use("/api", paymentCycleRoute);
 app.use("/api", empGroupRoute);
 app.use("/api", destinationRoute);
 
-//Routes related to accounts 
+//Routes related to accounts
 app.use("/api", accountsRoute);
 app.use("/api", servicesRoute);
 app.use("/api", requirementRoute);
@@ -133,16 +115,13 @@ app.use("/api", taskRoute);
 app.use("/api", threadRoute);
 app.use("/api/report", reportRoute);
 app.use("/api", mapper);
-app.use('/api', notificationRoutes);
-app.use('/api', bulkUpload);
+app.use("/api", notificationRoutes);
+app.use("/api", bulkUpload);
 
+app.use("/api", routingtaskRoute);
+app.use("/api", routingTaskThread);
 
-app.use('/api', routingtaskRoute);
-app.use('/api', routingTaskThread);
-
-
-
-app.get('/', async (req, res) => {
+app.get("/", async (req, res) => {
     // const notification=new Notification(
     //   {
     //     message:"Task created and assigned to very new",
@@ -159,31 +138,25 @@ app.get('/', async (req, res) => {
     // }
     // req.io.emit('personal', notification);
     //  req.io.emit('newAccount', { message: 'notification reloaded data'});
-    res.send("TERP - Webdesys")
-})
-
-
+    res.send("TERP - Webdesys");
+});
 
 try {
     async function main() {
         try {
             await fetchAndSendReport();
         } catch (error) {
-            console.error('Error in main:', error);
+            console.error("Error in main:", error);
         }
     }
+
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     console.log(`Current timezone: ${timezone}`);
 
-    const now = new Date()
+    const now = new Date();
     console.log(now, now.toString(), now.toISOString(), process.env.TZ);
 
-    cron.schedule('30 23 * * *', main);
+    cron.schedule("30 23 * * *", main);
 } catch (error) {
     console.log("some error in daily task", error.message);
 }
-
-const PORT = process.env.PORT || 4000;
-
-
-
